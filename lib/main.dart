@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// 各距離の計算式を3000回繰り返して処理時間をしらべる
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
@@ -104,15 +105,6 @@ class _MyHomePageState extends State<MyHomePage> {
       case _CalcType.simple:
         sw.start();
         for (int i = 0; i < loopMax; ++i) {
-          simple(firstLat, firstLon, secLat, secLon);
-        }
-        sw.stop();
-        tmpLen = simple(firstLat, firstLon, secLat, secLon);
-        tmpMicro = sw.elapsedMicroseconds;
-        break;
-      case _CalcType.simple2:
-        sw.start();
-        for (int i = 0; i < loopMax; ++i) {
           distanceBetween(firstLat, firstLon, secLat, secLon);
         }
         sw.stop();
@@ -137,49 +129,13 @@ class _MyHomePageState extends State<MyHomePage> {
         tmpLen = distanceHubeny(firstLat, firstLon, secLat, secLon);
         tmpMicro = sw.elapsedMicroseconds;
         break;
-      case _CalcType.hubeny2:
-        sw.start();
-        for (int i = 0; i < loopMax; ++i) {
-          distanceHubeny2(firstLat, firstLon, secLat, secLon);
-        }
-        sw.stop();
-        tmpLen = distanceHubeny2(firstLat, firstLon, secLat, secLon);
-        tmpMicro = sw.elapsedMicroseconds;
-        break;
-      case _CalcType.hubeny3:
-        sw.start();
-        for (int i = 0; i < loopMax; ++i) {
-          hubeny(firstLat, firstLon, secLat, secLon);
-        }
-        sw.stop();
-        tmpLen = hubeny(firstLat, firstLon, secLat, secLon);
-        tmpMicro = sw.elapsedMicroseconds;
-        break;
       case _CalcType.lambertAndoyer:
-        sw.start();
-        for (int i = 0; i < loopMax; ++i) {
-          distanceLambertAndoyer(firstLat, firstLon, secLat, secLon);
-        }
-        sw.stop();
-        tmpLen = distanceLambertAndoyer(firstLat, firstLon, secLat, secLon);
-        tmpMicro = sw.elapsedMicroseconds;
-        break;
-      case _CalcType.lambertAndoyer2:
         sw.start();
         for (int i = 0; i < loopMax; ++i) {
           lambertAndoyerDegree(firstLat, firstLon, secLat, secLon);
         }
         sw.stop();
         tmpLen = lambertAndoyerDegree(firstLat, firstLon, secLat, secLon);
-        tmpMicro = sw.elapsedMicroseconds;
-        break;
-      case _CalcType.lambertAndoyer3:
-        sw.start();
-        for (int i = 0; i < loopMax; ++i) {
-          lambertAndoyer2(firstLat, firstLon, secLat, secLon);
-        }
-        sw.stop();
-        tmpLen = lambertAndoyer2(firstLat, firstLon, secLat, secLon);
         tmpMicro = sw.elapsedMicroseconds;
         break;
       case _CalcType.ono:
@@ -189,15 +145,6 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         sw.stop();
         tmpLen = onoDegree(firstLat, firstLon, secLat, secLon);
-        tmpMicro = sw.elapsedMicroseconds;
-        break;
-      case _CalcType.ono2:
-        sw.start();
-        for (int i = 0; i < loopMax; ++i) {
-          ono2(firstLat, firstLon, secLat, secLon);
-        }
-        sw.stop();
-        tmpLen = ono2(firstLat, firstLon, secLat, secLon);
         tmpMicro = sw.elapsedMicroseconds;
         break;
       case _CalcType.jordanInverse:
@@ -219,16 +166,10 @@ class _MyHomePageState extends State<MyHomePage> {
 enum _CalcType {
   flat,
   simple,
-  simple2,
   haversine,
   hubeny,
-  hubeny2,
-  hubeny3,
   lambertAndoyer,
-  lambertAndoyer2,
-  lambertAndoyer3,
   ono,
-  ono2,
   jordanInverse,
 }
 

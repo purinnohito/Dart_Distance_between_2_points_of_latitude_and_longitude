@@ -49,31 +49,33 @@ import 'dart:core';
 
 // -----平面三角法-----
 
-/// 緯度1[lat1]と経度1[lon1]からなる1点と、
-/// 緯度2[lat2]と経度2[lon2]からなる1点との距離を
-/// 単純な平面として計算する
+/// ２点間の直線距離を求める
+/// 緯度1[lat1]始点緯度(十進度)
+/// と
+/// 経度1[lon1]始点緯度(十進度)
+/// からなる1点と、
+/// 緯度2[lat2]始点緯度(十進度)
+/// と
+/// 経度2[lon2]始点緯度(十進度)
+/// からなる1点との距離を
+/// 単純な平面として計算する(平面三角法)
 /// 計算結果は[double]型(単位:m)で返す
 double flatDistance(double lat1, double lon1, double lat2, double lon2) {
   // 緯度の差分をmに変換
   final latLength = per_latitude_degree * (lat1 - lat2);
   // 経度の差分をmに変換
-  final lngLength = _per_longitude_degree(lat1) * (lon1 - lon2);
+  final lngLength = _perLongitudeDegree(lat1) * (lon1 - lon2);
   // 平方根で距離を割り出す
   return sqrt(pow(latLength, 2) + pow(lngLength, 2));
 }
 
 // -----簡易式 - 球面三角法-----
 
-// 簡易式[球面三角法](度数法)
-// ２地点間の距離を求める
-//   GoogleMapAPIのgeometory.computeDistanceBetweenのロジック
-//   浮動小数点の精度が足りないためGoogleより桁数が少ないかもしれません
-//
-// @param float $lat1 緯度１
-// @param float $lon1 経度１
-// @param float $lat2 緯度２
-// @param float $lon2 経度２
-// @return float 距離(m)
+/// ２点間の直線距離を求める
+/// 緯度1[lat1]と経度1[lon1]からなる1点と、
+/// 緯度2[lat2]と経度2[lon2]からなる1点との距離を
+/// 簡易式(球面三角法)で球体と仮定して計算する
+/// 計算結果は[double]型(単位:m)で返す
 double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
   // 緯度経度をラジアンに変換
   final radLat1 = _toRadians(lat1); // 緯度１
@@ -89,22 +91,13 @@ double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
           cos(radLat1) * cos(radLat2) * pow(sin(averageLon), 2)));
 }
 
-// ============================================================================================
-// https://oshiete.goo.ne.jp/qa/249931.html
-// 簡易式[球面三角法](Radians)
-// ============================================================================================
-double simple(double lat1, double lon1, double lat2, double lon2) {
-  final t1 = _toRadians(lat1);
-  final g1 = _toRadians(lon1);
-  final t2 = _toRadians(lat2);
-  final g2 = _toRadians(lon2);
-  final dt = (t1 - t2) / 2;
-  final dg = (g1 - g2) / 2;
-  final ret = pow(sin(dt), 2) + pow(sin(dg), 2) * cos(t1) * cos(t2);
-  return equatorialRadius * asin(sqrt(ret)) * 2;
-}
-
-// [球面三角法(方位)](Radians)最後の条件文は、Vincentyの式が正しいとして、それに対応できるような数値にしました
+/// この関数はラジアンで引数を渡す
+/// 原典は地点2から見た地点1の方位角です
+/// 地点2と地点1の経緯度を入れ替えて地点1から見た地点2の方位角とした 二点間の向きを返す
+/// 緯度1[t1]と経度1[g1]からなる1点と、
+/// 緯度2[t2]と経度2[g2]からなる1点との距離を
+/// 簡易式(球面三角法)で球体と仮定して計算する
+/// 計算結果は[double]型(度)で返す
 double simpleAngle(double t1, double g1, double t2, double g2) {
   final t1d = atan((1 - henpei) * tan(t1));
   final t2d = atan((1 - henpei) * tan(t2));
@@ -122,13 +115,12 @@ double simpleAngle(double t1, double g1, double t2, double g2) {
 }
 
 // -----Haversineの公式-----
-// ２点間の直線距離を求める（Haversineの公式）
-//
-// @param   double   $lat1       始点緯度(十進度)
-// @param   double   $lon1       始点経度(十進度)
-// @param   double   $lat2       終点緯度(十進度)
-// @param   double   $lon2       終点経度(十進度)
-// @return  double               距離（m）
+
+/// ２点間の直線距離を求める（Haversineの公式）
+/// 緯度1[lat1]と経度1[lon1]からなる1点と、
+/// 緯度2[lat2]と経度2[lon2]からなる1点との距離を
+/// Haversineの公式をつかい計算する
+/// 計算結果は[double]型(単位:m)で返す
 double distanceHaversine(double lat1, double lon1, double lat2, double lon2) {
   final x1 = lat2 - lat1;
   final dLatH = _toRadians(x1) / 2;
@@ -140,34 +132,13 @@ double distanceHaversine(double lat1, double lon1, double lat2, double lon2) {
 }
 
 // -----Hubenyの公式-----
-// ２点間の直線距離を求める（Hubenyの公式）
-//
-// @param   double   $lat1       始点緯度(十進度)
-// @param   double   $lon1       始点経度(十進度)
-// @param   double   $lat2       終点緯度(十進度)
-// @param   double   $lon2       終点経度(十進度)
-// @return  double               距離（m）
-double distanceHubeny(double lat1, double lon1, double lat2, double lon2) {
-  final radlat = _toRadians((lat1 - lat2).abs());
-  final radlon = _toRadians((lon1 - lon2).abs());
-  final average = _toRadians(lat1 + ((lat2 - lat1) / 2));
-  // 世界測地系
-  final temp = 1.0 - e2 * pow(sin(average), 2);
-  final meridian = a1e2 / sqrt(pow(temp, 3)); // 子午線曲率半径
-  final prime = equatorialRadius / sqrt(temp); // 卯酉線曲率半径
-  return sqrt(
-      pow(meridian * radlat, 2) + pow(prime * cos(average) * radlon, 2));
-}
 
-// ２地点間の距離(m)を求める
-// ヒュベニの公式から求めるバージョン
-//
-// @param double $lat1 緯度１
-// @param double $lon1 経度１
-// @param double $lat2 緯度２
-// @param double $lon2 経度２
-// @return double 距離(m)
-double distanceHubeny2(double lat1, double lon1, double lat2, double lon2) {
+/// ２点間の直線距離を求める（Hubenyの公式）
+/// 緯度1[lat1]と経度1[lon1]からなる1点と、
+/// 緯度2[lat2]と経度2[lon2]からなる1点との距離を
+/// Hubenyの公式を使い計算する
+/// 計算結果は[double]型(単位:m)で返す
+double distanceHubeny(double lat1, double lon1, double lat2, double lon2) {
   // 緯度経度をラジアンに変換
   final radLat1 = _toRadians(lat1); // 緯度１
   final radLon1 = _toRadians(lon1); // 経度１
@@ -194,79 +165,14 @@ double distanceHubeny2(double lat1, double lon1, double lat2, double lon2) {
   return dist;
 }
 
-//
-// ヒュベニの公式
-//
-double hubeny(double lat_1, double lng_1, double lat_2, double lng_2) {
-  //degree to radian
-  final lat1 = _toRadians(lat_1);
-  final lng1 = _toRadians(lng_1);
-  final lat2 = _toRadians(lat_2);
-  final lng2 = _toRadians(lng_2);
-  // 緯度差
-  final latDiff = lat1 - lat2;
-  // 経度差算
-  final lngDiff = lng1 - lng2;
-  // 平均緯度
-  final latAvg = (lat1 + lat2) / 2.0;
-  // 赤道半径
-  final a = 6378137.0;
-  // 極半径
-  final b = 6356752.314140356;
-  // 第一離心率^2
-  final e2 = 0.00669438002301188;
-  // 赤道上の子午線曲率半径
-  final a1e2 = 6335439.32708317;
-  final sinLat = sin(latAvg);
-  final w2 = 1.0 - e2 * (sinLat * sinLat);
-  // 子午線曲率半径M
-  final m = a1e2 / (sqrt(w2) * w2);
-  // 卯酉線曲率半径
-  final n = a / sqrt(w2);
-  final t1 = m * latDiff;
-  final t2 = n * cos(latAvg) * lngDiff;
-  return sqrt((t1 * t1) + (t2 * t2));
-}
-
 // -----測地線航海算法バージョン-----
-// ２地点間の距離(m)を求める
-// 測地線航海算法バージョン
-//
-// @param double $lat1 緯度１
-// @param double $lon1 経度１
-// @param double $lat2 緯度２
-// @param double $lon2 経度２
-// @return double 距離(m)
-double distanceLambertAndoyer(
-    double lat1, double lon1, double lat2, double lon2) {
-  // 緯度経度をラジアンに変換
-  final radLat1 = _toRadians(lat1); // 緯度１
-  final radLon1 = _toRadians(lon1); // 経度１
-  final radLat2 = _toRadians(lat2); // 緯度２
-  final radLon2 = _toRadians(lon2); // 経度２
-  final a = equatorialRadius; // 赤道半径
-  // $B = 6356752.314140356; // 極半径
-  // $F = ($A - $B) / $A;
-  final f = 0.003352858356825; // 扁平率
-  final bdivA = 0.99664714164317; // $B/$A
-  final p1 = atan(bdivA * tan(radLat1));
-  final p2 = atan(bdivA * tan(radLat2));
-  final sd =
-      acos(sin(p1) * sin(p2) + cos(p1) * cos(p2) * cos(radLon1 - radLon2));
-  final cosSd = cos(sd / 2);
-  final sinSd = sin(sd / 2);
-  final c = (sin(sd) - sd) * pow(sin(p1) + sin(p2), 2) / cosSd / cosSd;
-  final s = (sin(sd) + sd) * pow(sin(p1) - sin(p2), 2) / sinSd / sinSd;
-  final delta = f / 8.0 * (c - s);
-  return a * (sd + delta);
-}
 
-// =================================================================
-// http://www2.nc-toyama.ac.jp/~mkawai/lecture/sailing/geodetic/geosail.html
-// Lambert-Andoyer(Radians)
-// VBA scrit
-// a 長半径 f扁平率 は定数で呼び出す
-// =================================================================
+/// ２点間の直線距離を求める(ラジアンバージョン)
+/// 測地線航海算法バージョン
+/// 緯度1[t1]と経度1[g1]からなる1点と、
+/// 緯度2[t2]と経度2[g2]からなる1点との距離を
+/// 測地線航海算法を使って計算する
+/// 計算結果は[double]型(単位:m)で返す
 double lambertAndoyer(double t1, double g1, double t2, double g2) {
   final u1 = atan((1 - henpei) * tan(t1));
   final u2 = atan((1 - henpei) * tan(t2));
@@ -278,34 +184,28 @@ double lambertAndoyer(double t1, double g1, double t2, double g2) {
   return equatorialRadius * (x + dP);
 }
 
-// Lambert-Andoyer(度数法->Radians)
+/// Lambert-Andoyer(度数法->Radians)
+/// ２点間の直線距離を求める
+/// 測地線航海算法バージョン
+/// 緯度1[lat1]と経度1[lon1]からなる1点と、
+/// 緯度2[lat2]と経度2[lon2]からなる1点との距離を
+/// 測地線航海算法を使って計算する
+/// 計算結果は[double]型(単位:m)で返す
 double lambertAndoyerDegree(
     double lat1, double lon1, double lat2, double lon2) {
   return lambertAndoyer(
       _toRadians(lat1), _toRadians(lon1), _toRadians(lat2), _toRadians(lon2));
 }
 
-double lambertAndoyer2(double lat1, double lon1, double lat2, double lon2) {
-  double t1 = _toRadians(lat1);
-  double g1 = _toRadians(lon1);
-  double t2 = _toRadians(lat2);
-  double g2 = _toRadians(lon2);
-  final u1 = atan((1 - henpei) * tan(t1));
-  final u2 = atan((1 - henpei) * tan(t2));
-  final x = acos(sin(u1) * sin(u2) + cos(u1) * cos(u2) * cos(g1 - g2));
-  final dP = henpei /
-      8 *
-      ((sin(x) - x) * pow(sin(u1) + sin(u2), 2) / pow(cos(x / 2), 2) -
-          (sin(x) + x) * pow(sin(u1) - sin(u2), 2) / pow(sin(x / 2), 2));
-  return equatorialRadius * (x + dP);
-}
-
 // -----小野の式バージョン-----
-// =================================================================
-// http://www1.kaiho.mlit.go.jp/GIJUTSUKOKUSAI/KENKYU/report/rhr18/rhr18-09.pdf
-// 海上保安庁 水路部研究報告 第18号 昭和58年, March, 1983
-// 小野の式(Radians)
-// =================================================================
+
+/// 小野の式(Radians)
+/// ２点間の直線距離を求める
+/// 小野の式バージョン
+/// 緯度1[t1]と経度1[g1]からなる1点と、
+/// 緯度2[t2]と経度2[g2]からなる1点との距離を
+/// 小野の式を使い計算する
+/// 計算結果は[double]型(単位:m)で返す
 double ono(double t1, double g1, double t2, double g2) {
   final u1 = atan((1 - henpei) * tan(t1));
   final u2 = atan((1 - henpei) * tan(t2));
@@ -322,23 +222,25 @@ double ono(double t1, double g1, double t2, double g2) {
   return equatorialRadius * x - c * p - d * q;
 }
 
-double ono2(double lat1, double lon1, double lat2, double lon2) {
-  double t1 = _toRadians(lat1);
-  double g1 = _toRadians(lon1);
-  double t2 = _toRadians(lat2);
-  double g2 = _toRadians(lon2);
-  final u1 = atan((1 - henpei) * tan(t1));
-  final u2 = atan((1 - henpei) * tan(t2));
-  final x = acos(sin(u1) * sin(u2) + cos(u1) * cos(u2) * cos(g1 - g2));
-  final c = pow((sin(u1) + sin(u2)), 2);
-  final d = pow((sin(u1) - sin(u2)), 2);
-  final p = equatorialRadius * henpei * (x - sin(x)) / (4 * (1 + cos(x)));
-  final q = equatorialRadius * henpei * (x + sin(x)) / (4 * (1 - cos(x)));
-  return equatorialRadius * x - c * p - d * q;
+/// 小野の式(度数法->Radians)
+/// ２点間の直線距離を求める
+/// 小野の式バージョン
+/// 緯度1[lat1]と経度1[lon1]からなる1点と、
+/// 緯度2[lat2]と経度2[lon2]からなる1点との距離を
+/// 小野の式を使い計算する
+/// 計算結果は[double]型(単位:m)で返す
+double onoDegree(double lat1, double lon1, double lat2, double lon2) {
+  return ono(
+      _toRadians(lat1), _toRadians(lon1), _toRadians(lat2), _toRadians(lon2));
 }
 
-// 原典は地点2から見た地点1の方位角です
-// 地点2と地点1の経緯度を入れ替えて地点1から見た地点2の方位角とした grandmaster 2019/1/26
+/// この関数はラジアンで引数を渡す
+/// 原典は地点2から見た地点1の方位角です
+/// 地点2と地点1の経緯度を入れ替えて地点1から見た地点2の方位角とした 二点間の向きを返す
+/// 緯度1[t1]と経度1[g1]からなる1点と、
+/// 緯度2[t2]と経度2[g2]からなる1点との距離を
+/// 簡易式(球面三角法)で球体と仮定して計算する
+/// 計算結果は[double]型(度)で返す
 double onoAzimus(double t1, double g1, double t2, double g2) {
   final u1 = atan(radius_short / equatorialRadius * tan(t1));
   final u2 = atan(radius_short / equatorialRadius * tan(t2));
@@ -350,25 +252,20 @@ double onoAzimus(double t1, double g1, double t2, double g2) {
   return 2 * pi - cta;
 }
 
-// Lambert-Andoyer(度数法->Radians)
-double onoDegree(double lat1, double lon1, double lat2, double lon2) {
-  return ono(
-      _toRadians(lat1), _toRadians(lon1), _toRadians(lat2), _toRadians(lon2));
-}
-
-// ==========================================================================
-// https://www.jstage.jst.go.jp/article/jinnavi/133/0/133_KJ00005001277/_pdf
-// 大圏航海算法　平成9年9月　河合雅司　富山高専（旧富山商船高等）
-// 文献に記載の　赤道半径　6377399.155　扁平率　1/299.152813　から
-// 本文献は　日本測地系で計算を行っていることがわかる
-// 他の測地系の赤道半径・扁平率でこの関数が使えるかどうかは文献には記載が無い
-// 本プログラムでは、赤道半径・扁平率を世界測地系(GRS80)で計算をおこなっている
-// 以下の内容を、前後の法則性・精度の確認、で誤植と判断し変更を行った
-// 　3章式(9)の「B3=... -e^4/32*cosm^4」を「-e^6/32*cosm^4」とした
-// ==========================================================================
+// コードの移植のみ、以下元のコメント
+// ' ==========================================================================
+// ' https://www.jstage.jst.go.jp/article/jinnavi/133/0/133_KJ00005001277/_pdf
+// ' 大圏航海算法　平成9年9月　河合雅司　富山高専（旧富山商船高等）
+// ' 文献に記載の　赤道半径　6377399.155　扁平率　1/299.152813　から
+// ' 本文献は　日本測地系で計算を行っていることがわかる
+// ' 他の測地系の赤道半径・扁平率でこの関数が使えるかどうかは文献には記載が無い
+// ' 本プログラムでは、赤道半径・扁平率を世界測地系(GRS80)で計算をおこなっている
+// ' 以下の内容を、前後の法則性・精度の確認、で誤植と判断し変更を行った
+// ' 　3章式(9)の「B3=... -e^4/32*cosm^4」を「-e^6/32*cosm^4」とした
+// ' ==========================================================================
 double jordanDirect(
     double t1, double g1, double houikaku, double length, String key) {
-  final u1 = atan((1 - henpei) * tan(t1));
+  // final u1 = atan((1 - henpei) * tan(t1));
   final e2 = henpei * (2 - henpei); //第一離心率の2乗
   final e4 = e2 * e2;
   final e6 = e4 * e2;
@@ -453,11 +350,21 @@ enum JordanInverseType {
   sokuchisencyo,
   houikaku,
 }
+
 // ---------------------------------------------------
 // https://www.jstage.jst.go.jp/article/jinnavi/133/0/133_KJ00005001277/_pdf
 // 大圏航海算法　平成9年9月　河合雅司　富山高専（旧富山商船高等）
 // 回転楕円体の2点から、測地線距離と方位角を求める
-// ---------------------------------------------------
+/// Jordan Direct/Inverse Method / ヨルダンの式(度数法)
+/// ２点間の直線距離を求める
+/// ヨルダンの式バージョン
+/// 緯度1[lat1]と経度1[lon1]からなる1点と、
+/// 緯度2[lat2]と経度2[lon2]からなる1点との距離を
+/// ヨルダンの式を使い計算する。
+/// 引数[kry]に[JordanInverseType.sokuchisencyo]を渡すと距離計算になる。(デフォルト)
+/// 計算結果は[double]型(単位:m)で返す
+/// [houikaku]キーを渡すと方位角を返す
+/// 計算結果は[double]型(単位:度)で返す
 double jordanInverse(double td1, double g1, double td2, double g2,
     {JordanInverseType key = JordanInverseType.sokuchisencyo}) {
   final f = henpei;
@@ -575,5 +482,5 @@ double _toDegree(double rad) {
   return rad * 180 / pi;
 }
 
-double _per_longitude_degree(lat) =>
+double _perLongitudeDegree(lat) =>
     _toRadians(easyradius) * cos(_toRadians(lat));
